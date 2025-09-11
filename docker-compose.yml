@@ -20,7 +20,9 @@ services:
       - minioapi:/data
     command: server /data
     networks:
-      - minio-network
+      minio-network:
+        aliases:
+          - minio
 
 volumes:
   minioapi:

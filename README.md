@@ -54,7 +54,7 @@ Cấu hình hiện tại sử dụng identity plugin để xác thực:
 Dữ liệu được lưu trữ trong Docker volume `minioapi` để đảm bảo persistence.
 
 ## Network
-MinIO được cấu hình để chạy trong mạng `minio-network` với driver overlay. Đây là internal network riêng cho MinIO.
+MinIO được cấu hình để chạy trong mạng `minio-network` với driver overlay. Đây là internal network riêng cho MinIO với network alias để dễ dàng kết nối.
 
 ### Cách 1: Sử dụng external network (Khuyến nghị)
 Nếu tRadar đã có network riêng, bạn có thể sử dụng external network:
@@ -78,6 +78,48 @@ networks:
 services:
   minio:
     network_mode: "host"
+```
+
+## Kết nối từ Container khác
+
+### Network Alias
+MinIO được cấu hình với network alias `minio`, cho phép các container khác gọi đến:
+```bash
+http://minio:9000
+```
+
+### Cách kết nối từ container khác:
+
+#### 1. Cùng stack `minio`:
+```yaml
+services:
+  your-app:
+    image: your-app:latest
+    networks:
+      - minio-network
+    environment:
+      - MINIO_ENDPOINT=http://minio:9000  # Sử dụng alias
+```
+
+#### 2. Khác stack:
+```yaml
+services:
+  your-app:
+    image: your-app:latest
+    networks:
+      - minio-network
+    environment:
+      - MINIO_ENDPOINT=http://minio:9000  # Sử dụng alias
+
+networks:
+  minio-network:
+    external: true  # Sử dụng network có sẵn
+```
+
+#### 3. Test kết nối:
+```bash
+# Từ container khác trong cùng network
+curl http://minio:9000/minio/health/live
 ```
 
 ## Lệnh hữu ích cho Docker Swarm
@@ -158,10 +200,19 @@ services:
 networks:
   minio-network:
     driver: overlay            # Overlay network cho Docker Swarm
+
+# Service network với alias
+services:
+  storage:
+    networks:
+      minio-network:
+        aliases:
+          - minio              # Alias để gọi http://minio:9000
 ```
 - **Network name**: `minio-network`
 - **Driver**: `overlay` - cho phép containers giao tiếp qua nhiều nodes
 - **Internal network**: Không phải external, tạo network riêng cho MinIO
+- **Network alias**: `minio` - cho phép gọi bằng `http://minio:9000`
 - **Note**: Thay đổi tên network trùng với network của tRadar
 
 ### Cấu hình Volume
