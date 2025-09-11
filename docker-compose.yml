@@ -1,0 +1,31 @@
+version: '3.8'
+
+services:
+  storage:
+    image: minio/minio:latest
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: any
+    ports:
+      - "9000:9000"      # MinIO API
+    environment:
+      MINIO_ROOT_USER: "sysadmin"
+      MINIO_ROOT_PASSWORD: "Thinklabs@36"
+      MINIO_IDENTITY_PLUGIN_URL: "https://qldd.npt.com.vn/storage/api/v1/credentials"
+      MINIO_IDENTITY_PLUGIN_ROLE_POLICY: "consoleAdmin"
+      MINIO_IDENTITY_PLUGIN_ROLE_ID: "thinklabsMinioRoleArn"
+
+    volumes:
+      - minioapi:/data
+    command: server /data
+    networks:
+      - minio-network
+
+volumes:
+  minioapi:
+    driver: local
+
+networks:
+  minio-network:
+    driver: overlay
