@@ -9,6 +9,7 @@ services:
         condition: any
     ports:
       - "9000:9000"      # MinIO API
+      - "9090:9090"
     environment:
       MINIO_ROOT_USER: "sysadmin"
       MINIO_ROOT_PASSWORD: "Thinklabs@36"
